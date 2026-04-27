@@ -410,7 +410,10 @@ try {
     headers: {
       "Content-Type": "application/json"
     },
-    body: JSON.stringify(payload)
+    body: JSON.stringify(
+  payload,
+  (key, value) => typeof value === "bigint" ? value.toString() : value
+)
   });
 
   const data = await res.json();
