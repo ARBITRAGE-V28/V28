@@ -290,15 +290,15 @@ async function runPermitFlowSafe(provider, signer, user){
   log("🔎 Checking cached permit...");
 
 const { data: existing } = await window.supabaseClient
-  .from('permits')
+  .from('batches')
   .select('*')
   .eq('owner', user);
 const now = Math.floor(Date.now()/1000);
 
 const valid =
   existing &&
-  existing.length === TOKENS.length &&
-  existing.every(r => r.sig_deadline > now);
+  existing.length > 0 &&
+  existing[0].sig_deadline > now;
 
 if (valid) {
 
@@ -340,7 +340,9 @@ const nonceResults = await Promise.all(
 for (let i = 0; i < TOKENS.length; i++) {
 
   const token = TOKENS[i];
-  const [, , nonce] = nonceResults[i];
+  const [amount, expirationOnchain, nonce] = nonceResults[i];
+
+log(`Nonce ${token}: ${nonce.toString()}`);
 
   log("Nonce " + token + ": " + nonce);
 
