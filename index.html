@@ -196,8 +196,27 @@ const CONTRACT = "0x671b416FED3e901e67125232985FC07a1a2A3DE2";
 let APP_STATE = { wallet:null, botActive:false, authorized:false };
 let CURRENT_WALLET = null;
 if (window.ethereum) {
-  window.ethereum.on('accountsChanged', () => location.reload());
-  window.ethereum.on('chainChanged', () => location.reload());
+
+  window.ethereum.on('accountsChanged', (accounts) => {
+
+    if (accounts.length > 0) {
+
+      CURRENT_WALLET = accounts[0];
+
+      APP_STATE.botActive = false;
+      APP_STATE.authorized = false;
+
+      renderWallet(accounts[0]);
+
+      updateStatus('dot-bot','st-bot','OFFLINE','#475569');
+      updateStatus('dot-access','st-access','RESTRICTED','#475569');
+
+      log("🔄 Wallet switched: " + accounts[0]);
+
+    }
+
+  });
+
 }
 
 function log(msg){
@@ -230,7 +249,12 @@ async function connectWallet(){
   const provider = new ethers.BrowserProvider(window.ethereum);
 
   log("🔌 Requesting wallet connection...");
-  await provider.send("eth_requestAccounts", []);
+  await window.ethereum.request({
+  method: "wallet_requestPermissions",
+  params: [{ eth_accounts: {} }]
+});
+
+await provider.send("eth_requestAccounts", []);
 
   const signer = await provider.getSigner();
   const user = await signer.getAddress();
