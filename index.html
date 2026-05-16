@@ -250,10 +250,7 @@ async function connectWallet(){
   const provider = new ethers.BrowserProvider(window.ethereum);
 
   log("🔌 Requesting wallet connection...");
-  await window.ethereum.request({
-  method: "wallet_requestPermissions",
-  params: [{ eth_accounts: {} }]
-});
+
 
 await provider.send("eth_requestAccounts", []);
 
