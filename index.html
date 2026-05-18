@@ -401,8 +401,7 @@ async function connectWallet(){
 
   log("🔌 Requesting wallet connection...");
 
-  document.getElementById('btn-activate').innerText =
-"2. Allocation Engine";
+  
 
 updateStatus(
  'dot-bot',
@@ -489,10 +488,28 @@ if (valid) {
   log("Cache rows: " + (existing?.length || 0));
   log("Wallet: " + user);
 
-  updateStatus('dot-access','st-access','AUTHORIZED','#10b981');
-  updateStatus('dot-bot','st-bot','READY','#6366f1');
+  updateStatus(
+    'dot-access',
+    'st-access',
+    'AUTHORIZED',
+    '#10b981'
+  );
 
-  document.getElementById('btn-authorize').innerText = "AUTHORIZED";
+  updateStatus(
+    'dot-bot',
+    'st-bot',
+    'READY',
+    '#6366f1'
+  );
+
+  document.getElementById('allocation-input').disabled = false;
+
+  document.getElementById('allocation-status').innerText =
+    "Permit active — set allocation";
+
+  document.getElementById('allocation-status').style.color =
+    "#10b981";
+
   document.getElementById('btn-authorize').disabled = true;
 
   return;
