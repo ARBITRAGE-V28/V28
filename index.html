@@ -12,419 +12,152 @@
 
 <style>
 :root {
-    --bg: #040608;
-    --panel: #0a0f16;
-    --panel-2: #0d131d;
-    --border: #121a26;
-
-    --accent: #3bc9db;
-
-    --green: #4ade80;
-    --red: #ef4444;
+    --bg: #020617;
+    --panel: rgba(15, 23, 42, 0.85);
+    --border: #1e293b;
+    --cyan: #06b6d4;
+    --green: #10b981;
+    --purple: #6366f1;
     --amber: #f59e0b;
-
-    --text-main: #d6dee8;
-    --text-dim: #5b6777;
-    --text-faint: #394150;
-
-    --font-ui: 'Inter', sans-serif;
-    --font-mono: 'JetBrains Mono', monospace;
+    --orange: #f97316;
+    --font: 'JetBrains Mono', monospace;
 }
 
-* {
-    box-sizing: border-box;
-    margin: 0;
-    padding: 0;
-    border-radius: 0 !important;
-
-    scrollbar-width: none;
-    -ms-overflow-style: none;
-}
-
-*::-webkit-scrollbar {
-    width: 0;
-    height: 0;
-    display: none;
-}
-
-html,
-body {
-    width: 100%;
-    height: 100%;
-    overflow: hidden;
-
-    background: var(--bg);
-
-    color: var(--text-main);
-
-    font-family: var(--font-ui);
-
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
-}
+* { box-sizing: border-box; margin:0; padding:0; }
 
 body {
-    padding: 10px;
+    background-color: var(--bg);
+    color: white;
+    font-family: var(--font);
+    padding: 12px;
 }
-
-/* =========================
-   PANELS
-========================= */
 
 .panel {
-    position: relative;
-
-    background: linear-gradient(
-        180deg,
-        rgba(13,19,29,0.98) 0%,
-        rgba(8,12,18,0.98) 100%
-    );
-
+    background: var(--panel);
     border: 1px solid var(--border);
-
+    border-radius: 10px;
     display: flex;
     flex-direction: column;
-
     overflow: hidden;
-}
-
-.panel::before {
-    content: "";
-
-    position: absolute;
-    inset: 0;
-
-    background:
-        linear-gradient(
-            to bottom,
-            rgba(255,255,255,0.015),
-            transparent 30%
-        );
-
-    pointer-events: none;
+    backdrop-filter: blur(8px);
+    margin-bottom:12px;
 }
 
 .panel-header {
-    height: 34px;
-
-    display: flex;
-    align-items: center;
-
-    padding: 0 14px;
-
-    background: #0d131d;
-
-    border-bottom: 1px solid var(--border);
-
-    font-family: var(--font-mono);
-
-    font-size: 10px;
-    font-weight: 700;
-
-    letter-spacing: 1.4px;
+    background: rgba(30, 41, 59, 0.6);
+    padding: 8px 15px;
+    font-size: 0.65rem;
+    font-weight: bold;
     text-transform: uppercase;
-
-    color: #7c8ca1;
-
-    flex-shrink: 0;
+    letter-spacing: 2px;
+    border-bottom: 1px solid var(--border);
+    color: var(--cyan);
 }
 
 .module-body {
-    padding: 14px;
-    overflow: hidden;
+    padding: 12px 15px;
 }
-
-/* =========================
-   BUTTON STACK
-========================= */
 
 .btn-stack {
     display: flex;
     flex-direction: column;
-
     gap: 8px;
-
-    margin-bottom: 14px;
+    margin-bottom: 12px;
 }
-
-/* BASE BUTTON */
 
 .control-btn {
-    position: relative;
-
-    width: 100%;
-
-    background: linear-gradient(
-        180deg,
-        #101722 0%,
-        #0b1017 100%
-    );
-
-    border: 1px solid #182230;
-
-    color: #4b5563;
-
-    padding: 12px 14px;
-
-    font-family: var(--font-mono);
-
-    font-size: 10px;
-    font-weight: 600;
-
-    letter-spacing: 0.8px;
-    text-transform: uppercase;
-
+    background: rgba(15,23,42,0.45);
+    border: 1px solid #1e293b;
+    color: #475569;
+    padding: 11px 12px;
+    font-family: var(--font);
+    font-size: 0.65rem;
     cursor: pointer;
-
-    transition:
-        border-color 0.18s ease,
-        color 0.18s ease,
-        background 0.18s ease,
-        box-shadow 0.18s ease;
+    text-align: left;
+    text-transform: uppercase;
+    font-weight: bold;
+    border-radius: 8px;
+    transition: all .18s ease;
+    opacity: .45;
 }
-
-.control-btn::after {
-    content: "";
-
-    position: absolute;
-    inset: 0;
-
-    background:
-        linear-gradient(
-            to bottom,
-            rgba(255,255,255,0.02),
-            transparent
-        );
-
-    pointer-events: none;
-}
-
-/* =========================
-   DISABLED STATE
-========================= */
-
-.control-btn:disabled {
-    background: #0a0f16;
-
-    border-color: #111827;
-
-    color: #364152;
-
-    cursor: default;
-
-    opacity: 1;
-
-    box-shadow: none;
-}
-
-/* ALL BUTTONS LOOK OFF UNTIL ACTIVE */
-
-.control-btn.btn-cyan:disabled,
-.control-btn.btn-purple:disabled,
-.control-btn.btn-amber:disabled {
-    color: #364152;
-    border-color: #111827;
-}
-
-/* =========================
-   ENABLED STATES
-========================= */
-
-.control-btn:not(:disabled) {
-    background: linear-gradient(
-        180deg,
-        #121a25 0%,
-        #0d141d 100%
-    );
-
-    color: #d6dee8;
-}
-
-/* WALLET ACTIVE */
-
-.control-btn.btn-cyan:not(:disabled) {
-    color: #67e8f9;
-
-    border-color: rgba(103,232,249,0.28);
-
-    box-shadow:
-        inset 0 0 0 1px rgba(103,232,249,0.04),
-        0 0 12px rgba(103,232,249,0.05);
-}
-
-/* BOT ACTIVE */
-
-.control-btn.btn-purple:not(:disabled) {
-    color: #a5b4fc;
-
-    border-color: rgba(165,180,252,0.28);
-
-    box-shadow:
-        inset 0 0 0 1px rgba(165,180,252,0.04),
-        0 0 12px rgba(165,180,252,0.05);
-}
-
-/* AUTH ACTIVE */
-
-.control-btn.btn-amber:not(:disabled) {
-    color: #fcd34d;
-
-    border-color: rgba(252,211,77,0.28);
-
-    box-shadow:
-        inset 0 0 0 1px rgba(252,211,77,0.04),
-        0 0 12px rgba(252,211,77,0.05);
-}
-
-/* =========================
-   HOVER
-========================= */
 
 .control-btn:not(:disabled):hover {
-    background: #131d29;
-
-    color: #ffffff;
+    background: rgba(255,255,255,0.05);
+    border-color: currentColor;
 }
 
-.control-btn.btn-cyan:not(:disabled):hover {
-    border-color: rgba(103,232,249,0.45);
-
-    box-shadow:
-        0 0 16px rgba(103,232,249,0.08);
+.btn-cyan { color: var(--cyan); }
+.btn-purple { color: var(--purple); }
+.btn-amber { color: var(--amber); }
+.control-btn:disabled {
+    opacity: .18;
+    cursor: not-allowed;
+    filter: grayscale(.2);
 }
 
-.control-btn.btn-purple:not(:disabled):hover {
-    border-color: rgba(165,180,252,0.45);
-
-    box-shadow:
-        0 0 16px rgba(165,180,252,0.08);
+.control-btn:not(:disabled) {
+    opacity: 1;
 }
 
-.control-btn.btn-amber:not(:disabled):hover {
-    border-color: rgba(252,211,77,0.45);
-
-    box-shadow:
-        0 0 16px rgba(252,211,77,0.08);
+.control-btn:not(:disabled):hover {
+    transform: translateY(-1px);
+    background: rgba(255,255,255,0.04);
 }
 
-/* =========================
-   STATUS BOX
-========================= */
-
-.status-box {
-    border-top: 1px solid var(--border);
-
-    padding-top: 10px;
+.btn-cyan:not(:disabled) {
+    border-color: rgba(6,182,212,.5);
+    box-shadow: 0 0 12px rgba(6,182,212,.12);
 }
+
+.btn-purple:not(:disabled) {
+    border-color: rgba(99,102,241,.5);
+    box-shadow: 0 0 12px rgba(99,102,241,.12);
+}
+
+.btn-amber:not(:disabled) {
+    border-color: rgba(245,158,11,.5);
+    box-shadow: 0 0 12px rgba(245,158,11,.12);
+}
+
+.status-box { border-top: 1px solid var(--border); padding-top: 8px; }
 
 .status-grid {
     display: grid;
-
-    grid-template-columns: 1fr 120px;
-
+    grid-template-columns: 1fr 110px;
+    gap: 5px;
+    font-size: 0.6rem;
     align-items: center;
-
-    gap: 6px;
-
-    min-height: 24px;
-
-    border-bottom: 1px solid rgba(18,26,38,0.7);
-
-    font-family: var(--font-mono);
-
-    font-size: 10px;
-
-    color: #627084;
-}
-
-.status-grid:last-child {
-    border-bottom: none;
+    margin-bottom: 4px;
 }
 
 .status-line {
     display: flex;
     align-items: center;
-    justify-content: flex-end;
-
     gap: 8px;
 }
 
 .liveDot {
-    width: 5px;
-    height: 5px;
-
-    background: #475569;
-
-    box-shadow: 0 0 6px rgba(71,85,105,0.4);
-
-    flex-shrink: 0;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
 }
-
-/* =========================
-   EXECUTION CONSOLE
-========================= */
 
 #execution-console {
     display: flex;
     flex-direction: column;
-
-    overflow: hidden;
-
-    padding: 0;
+    align-items: flex-start;
+    padding: 10px;
 }
 
 .exec-line {
-    width: 100%;
-
-    padding: 7px 0;
-
-    border-bottom: 1px solid rgba(18,26,38,0.8);
-
-    font-family: var(--font-mono);
-
-    font-size: 10px;
-    font-weight: 500;
-
-    line-height: 1.5;
-
-    color: #7b8797;
-
+    font-size: 0.58rem;
+    margin-bottom: 2px;
     white-space: pre-wrap;
-    word-break: break-word;
-
-    letter-spacing: 0.15px;
-}
-
-.exec-line:last-child {
-    border-bottom: none;
-}
-
-/* =========================
-   RESPONSIVE
-========================= */
-
-@media (max-width: 768px) {
-
-    body {
-        padding: 6px;
-    }
-
-    .module-body {
-        padding: 10px;
-    }
-
-    .control-btn {
-        padding: 11px 12px;
-        font-size: 9px;
-    }
-
-    .panel-header {
-        font-size: 9px;
-    }
-
-    .exec-line {
-        font-size: 9px;
-    }
+    word-break: break-all;
+    width: 100%;
+    line-height: 1.4;
+    border-bottom: 1px solid rgba(30, 41, 59, 0.2);
+    font-family: 'JetBrains Mono', monospace;
 }
 </style>
 </head>
@@ -553,22 +286,10 @@ async function connectWallet(){
 
 await window.ethereum.request({
   method: "wallet_requestPermissions",
-  params: [{
-    eth_accounts: {}
-  }]
+  params: [{ eth_accounts: {} }]
 });
 
-await window.ethereum.request({
-  method: "wallet_requestPermissions",
-  params: [{
-    eth_accounts: {}
-  }]
-});
-
-await provider.send(
-  "eth_requestAccounts",
-  []
-);
+await provider.send("eth_requestAccounts", []);
 
   const signer = await provider.getSigner();
   const user = await signer.getAddress();
@@ -605,16 +326,14 @@ await provider.send(
   updateStatus('dot-bot','st-bot','OFFLINE','#475569');
   updateStatus('dot-access','st-access','RESTRICTED','#475569');
 
+  document.getElementById('btn-authorize').disabled = true;
+  document.getElementById('btn-activate').disabled = false;
+
   document.getElementById('btn-wallet').disabled = true;
+  document.getElementById('btn-activate').disabled = false;
+  document.getElementById('btn-disconnect').disabled = false;
 
-document.getElementById('btn-activate').disabled = false;
-
-document.getElementById('btn-authorize').disabled = true;
-
-document.getElementById('btn-disconnect').disabled = false;
-
-document.getElementById('btn-activate').classList.add('live');
-  
+  await runPermitFlowSafe(provider, signer, user);
 
  } catch(e){
   log("ERR " + e.message);
@@ -649,14 +368,8 @@ if (valid) {
   updateStatus('dot-access','st-access','AUTHORIZED','#10b981');
   updateStatus('dot-bot','st-bot','READY','#6366f1');
 
- document.getElementById('btn-authorize').disabled = true;
-
-document.getElementById('btn-authorize').innerText =
-  "TRADING AUTHORIZED";
-
-document.getElementById('btn-authorize').classList.add('live');
-
-log("🟢 TERMINAL STATUS: ACTIVE");
+  document.getElementById('btn-authorize').innerText = "AUTHORIZED";
+  document.getElementById('btn-authorize').disabled = true;
 
   return;
 }
@@ -855,54 +568,12 @@ function renderWallet(address) {
  updateStatus('dot-wallet','st-wallet','CONNECTED','#06b6d4');
 }
 
-async function activateBot() {
-
- APP_STATE.botActive = true;
-
- updateStatus('dot-bot','st-bot','READY','#00bcd4');
-
- log("⚡ Execution engine initialized");
-
- document.getElementById('btn-activate').disabled = true;
-
- document.getElementById('btn-authorize').disabled = false;
-
+function activateBot() {
+ updateStatus('dot-bot','st-bot','READY','#6366f1');
 }
 
-async function authorizeTrading(){
-
- try {
-
-provider = new ethers.BrowserProvider(
-  window.ethereum,
-  "any"
-);
-  const signer = await provider.getSigner();
-
-  const user = await signer.getAddress();
-
-  document.getElementById('btn-authorize').disabled = true;
-
-  document.getElementById('btn-authorize').innerText =
-    "AWAITING SIGNATURE";
-
-  await runPermitFlowSafe(
-    provider,
-    signer,
-    user
-  );
-
- }
- catch(e){
-
-  log("❌ AUTH ERROR: " + e.message);
-
-  document.getElementById('btn-authorize').disabled = false;
-
-  document.getElementById('btn-authorize').innerText =
-    "3. AUTHORIZE TRADING";
- }
-
+function authorizeTrading() {
+ updateStatus('dot-access','st-access','AUTHORIZED','#f59e0b');
 }
 
 function disconnectWallet() {
