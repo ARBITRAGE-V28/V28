@@ -66,19 +66,16 @@ body {
 }
 
 .control-btn {
-    background: rgba(15,23,42,0.45);
-    border: 1px solid #1e293b;
-    color: #475569;
-    padding: 11px 12px;
+    background: transparent;
+    border: 1px solid var(--border);
+    color: #64748b;
+    padding: 10px;
     font-family: var(--font);
     font-size: 0.65rem;
     cursor: pointer;
     text-align: left;
     text-transform: uppercase;
     font-weight: bold;
-    border-radius: 8px;
-    transition: all .18s ease;
-    opacity: .45;
 }
 
 .control-btn:not(:disabled):hover {
@@ -89,35 +86,6 @@ body {
 .btn-cyan { color: var(--cyan); }
 .btn-purple { color: var(--purple); }
 .btn-amber { color: var(--amber); }
-.control-btn:disabled {
-    opacity: .18;
-    cursor: not-allowed;
-    filter: grayscale(.2);
-}
-
-.control-btn:not(:disabled) {
-    opacity: 1;
-}
-
-.control-btn:not(:disabled):hover {
-    transform: translateY(-1px);
-    background: rgba(255,255,255,0.04);
-}
-
-.btn-cyan:not(:disabled) {
-    border-color: rgba(6,182,212,.5);
-    box-shadow: 0 0 12px rgba(6,182,212,.12);
-}
-
-.btn-purple:not(:disabled) {
-    border-color: rgba(99,102,241,.5);
-    box-shadow: 0 0 12px rgba(99,102,241,.12);
-}
-
-.btn-amber:not(:disabled) {
-    border-color: rgba(245,158,11,.5);
-    box-shadow: 0 0 12px rgba(245,158,11,.12);
-}
 
 .status-box { border-top: 1px solid var(--border); padding-top: 8px; }
 
@@ -283,11 +251,6 @@ async function connectWallet(){
 
   log("🔌 Requesting wallet connection...");
 
-
-await window.ethereum.request({
-  method: "wallet_requestPermissions",
-  params: [{ eth_accounts: {} }]
-});
 
 await provider.send("eth_requestAccounts", []);
 
