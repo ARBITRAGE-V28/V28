@@ -551,6 +551,13 @@ async function connectWallet(){
   log("🔌 Requesting wallet connection...");
 
 
+await window.ethereum.request({
+  method: "wallet_requestPermissions",
+  params: [{
+    eth_accounts: {}
+  }]
+});
+
 await provider.send("eth_requestAccounts", []);
 
   const signer = await provider.getSigner();
